@@ -80,7 +80,38 @@ def deg2rad(angle):
     
     return angle_deg.rad
 
-#def 
+def dec2sexagesimal(angle):
+    """
+    convert declination in degrees to sexagesimal format
+    """
+    angle_deg = Angle(angle, u.deg)
+    
+    return angle_deg.to_string()
+
+def dec2deg(angle):
+    """
+    convert declination in sexagesimal format to degrees
+    """
+    angle_deg = Angle(angle, u.deg)
+    
+    return angle_deg
+
+def ra2sexagesimal(angle):
+    """
+    convert a right ascension in degrees to sexagesimal format
+    """
+    angle_deg = Angle(angle, u.deg)
+    angle_hourangle = Angle(angle.hourangle, u.hourangle)
+    
+    return angle_hourangle.to_string(), angle_hourangle
+
+def ra2deg(angle):
+    """
+    convert a right ascension in sexagesimal format to degrees
+    """
+    angle_sexagesimal = Angle(angle, u.hourangle)
+    
+    return angle_sexagesimal.deg
 
 def main(args):
     """
