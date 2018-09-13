@@ -3,8 +3,21 @@ Script to convert angular units
 """
 
 import argparse as ap
-from astropy.coordinates import Angle
+from datetime import datetime
 from astropy import units as u
+from astropy.coordinates import (
+    Angle,
+    EarthLocation,
+    )
+from astropy.time import Time
+
+SITE_LATITUDE = 28.761935*u.deg
+SITE_LONGITUDE = -17.877591*u.deg
+SITE_ELEVATION = 2348*u.m
+
+SITE_LOCATION = EarthLocation(lat = SITE_LATITUDE,
+                              lon = SITE_LONGITUDE,
+                              height = SITE_ELEVATION)
 
 def argParse():
     """
@@ -113,6 +126,28 @@ def ra2deg(angle):
     
     return angle_sexagesimal.deg
 
+def ra2ha(ra):
+    """
+    convert right ascension to hour angle at the current time
+    """
+    ra = Angle(ra, u.hourangle)
+    
+    utc_now = Time(datetime.utcnow(), scale='utc', location=SITE_LOCATION)
+    lst = utc_now.sidereal_time('apparent')
+    
+    return (lst - ra).wrap_at(12*u.hourangle)
+
+def ha2ra(ha):
+    """
+    convert hour angle to right ascension at the current time
+    """
+    ha = Angle(ha, u.hourangle)
+    
+    utc_now = Time(datetime.utcnow(), scale='utc', location=SITE_LOCATION)
+    lst = utc_now.sidereal_time('apparent')
+    
+    return (lst - ha).wrap_at(24*u.hourangle)
+
 def main(args):
     """
     Carry out requested conversion
@@ -125,7 +160,22 @@ def main(args):
         print('Angle in radians: ', deg2rad(args.angle))
     
     elif args.dec2sexagesimal:
-        print('Declination in sexagesimal format: ')
+        print('Declination in sexagesimal format: ', dec2sexagesimal(args.angle))
+    
+    elif args.dec2deg:
+        print('Declination in degrees: ', dec2deg(args.angle))
+    
+    elif args.ra2sexagesimal:
+        print('Right ascension in sexagesimal format: ', ra2sexagesimal(args.angle))
+    
+    elif args.ra2deg:
+        print('Right ascension in degrees: ', ra2deg(args.angle))
+    
+    elif args.ra2ha:
+        print('Hour angle: ', ra2ha(args.angle))
+    
+    elif args.ha2ra:
+        print('Right ascension: ', ha2ra(args.angle))
     
     return None
 
