@@ -86,4 +86,4 @@ class TLE:
         """
         ra, dec, _ = (self.obj-self.obs).at(self.ts.utc(epoch)).radec()
         
-        return Longitude(ra.hours, u.hourangle), dec.degrees
+        return Longitude(ra.hours, u.hourangle), Latitude(dec.degrees, u.deg)

@@ -86,6 +86,11 @@ if __name__ == "__main__":
 	
 	# find expected radec
 	ra, dec = tle.radec(datetime.now().replace(tzinfo=utc))
-	print(ra, dec)
-		
-	print(tle.line1, tle.line2, tle.name)
+	
+	print('---------------------\n'
+	      'Expected position of NORAD {}\n'
+	      'RA:  {}\n'
+	      'DEC: {}\n'
+	      '---------------------'.format(str(args.norad_id),
+	                                     ra.to_string(),
+	                                     dec.to_string()))
