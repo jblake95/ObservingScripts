@@ -11,7 +11,7 @@ from tle import (
 import json
 import argparse as ap
 from datetime import datetime
-from astropy.table import Table
+from skyfield.api import utc
 
 def argParse():
     """
@@ -28,7 +28,7 @@ def argParse():
     """
     parser = ap.ArgumentParser()
     
-    parser.add_argument('tles_path',
+    parser.add_argument('log_path',
                         help='path to json file containing tle log',
                         type=str)
     
@@ -52,10 +52,11 @@ if __name__ == "__main__":
 	
 	# check for log file
 	try:
-		tles = json.loads(args.tles_path)
+		with open(args.log_path, 'r') as f:
+			log = json.load(f)
 	except:
-		print('No tle file found. Initiating...')
-		tles = {}
+		print('No log file found. Initiating...')
+		log = {}
 	
 	# if not provided manually, obtain latest tle from Space-Track
 	if args.line1 and args.line2:
@@ -67,19 +68,24 @@ if __name__ == "__main__":
 		tle = st.getLatestTLE(args.norad_id)
 	
 	# logging if TLE is new
-	if args.norad_id in tles.keys():
-		old_tle = TLE(tles[args.norad_id][-1][0],
-		              tles[args.norad_id][-1][1])
+	if args.norad_id in log.keys():
+		old_tle = TLE(log[args.norad_id][-1][0],
+		              log[args.norad_id][-1][1])
 		if tle.yday != old_tle.yday:
-			tles[args.norad_id].append([tle.line1,
-			                            tle.line2])
-		with open(args.tles_path) as f:
-			json.dumps(tles, f)
+			log[args.norad_id].append([tle.line1,
+			                           tle.line2])
+		with open(args.log_path, 'w') as f:
+			json.dump(log, f)
 	else:
-		tles[args.norad_id] = []
-		tles[args.norad_id].append([tle.line1,
-			                        tle.line2])
-		with open(args.tles_path) as f:
-			json.dumps(tles, f)
+		log.update({args.norad_id:[]})
+		log[args.norad_id].append([tle.line1,
+			                       tle.line2])
+		print(log)
+		with open(args.log_path, 'w') as f:
+			json.dump(log, f)
+	
+	# find expected radec
+	ra, dec = tle.radec(datetime.now().replace(tzinfo=utc))
+	print(ra, dec)
 		
 	print(tle.line1, tle.line2, tle.name)

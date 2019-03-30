@@ -4,13 +4,13 @@ Module for dealing with two-line element sets
 
 import getpass as gp
 from spacetrack import SpaceTrackClient
-import spacetrack.operators as op
 from skyfield.sgp4lib import EarthSatellite
 from skyfield.api import (
     load, 
-    Topos, 
-    utc,
+    Topos,
     )
+from astropy import units as u
+from astropy.coordinates import Longitude, Latitude
 
 TS = load.timescale() # save repeated use in iterative loops
 LE_FORMAT = '3le'     # TODO: generalise to allow for 'tle' format
@@ -63,13 +63,16 @@ class TLE:
         if name is not None:
             self.name = name[2:]
         
+        # ephemeris info
         self.obs = TOPOS_LOCATION
         self.obj = EarthSatellite(line1, line2, name)
         self.ts = TS
         
+        # book-keeping
         self.norad_id = int(self.line1[2:7])
         self.yday = float(self.line1[20:32])
         
+        # orbital properties
         self.inclination = float(self.line2[8:16])
         self.eccentricity = float(self.line2[26:33])
         self.raan = float(self.line2[17:25])
