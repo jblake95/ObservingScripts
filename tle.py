@@ -2,6 +2,16 @@
 Module for dealing with two-line element sets
 """
 
+import getpass as gp
+from spacetrack import SpaceTrackClient
+import spacetrack.operators as op
+from skyfield.sgp4lib import EarthSatellite
+from skyfield.api import (
+    load, 
+    Topos, 
+    utc,
+    )
+
 TS = load.timescale() # save repeated use in iterative loops
 LE_FORMAT = '3le'     # TODO: generalise to allow for 'tle' format
 
@@ -28,16 +38,20 @@ class ST:
         """
         st_un = 'J.Blake@warwick.ac.uk'
         st_pw = gp.getpass('Space-Track password: ')
+        
         return st_un, st_pw
     
     def getLatestTLE(self, norad_id):
         """
         Obtain latest TLE for a NORAD object
         """
-        return self.client.tle_latest(norad_cat_id=norad_id,
-                                      iter_lines=True,
-                                      ordinal=1,
-                                      format=LE_FORMAT)
+        elset = self.client.tle_latest(norad_cat_id=norad_id,
+                                       iter_lines=True,
+                                       ordinal=1,
+                                       format=LE_FORMAT)
+        tle = [line for line in elset]
+        
+        return TLE(tle[1], tle[2], name=tle[0])
 
 class TLE:
     """
