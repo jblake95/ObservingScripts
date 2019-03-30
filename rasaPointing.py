@@ -13,11 +13,6 @@ import argparse as ap
 from datetime import datetime
 from astropy.table import Table
 
-try:
-    FileNotFoundError
-except NameError:
-    FileNotFoundError = IOError
-
 def argParse():
     """
     Argument parser settings
@@ -33,8 +28,8 @@ def argParse():
     """
     parser = ap.ArgumentParser()
     
-    parser.add_argument('tle_path',
-                        help='path to json file containing tle info',
+    parser.add_argument('tles_path',
+                        help='path to json file containing tle log',
                         type=str)
     
     parser.add_argument('norad_id',
@@ -57,14 +52,12 @@ if __name__ == "__main__":
 	
 	# check for log file
 	try:
-		tles = json.loads(args.tle_path)
+		tles = json.loads(args.tles_path)
 	except:
 		print('No tle file found. Initiating...')
 		tles = {}
-		with open(args.tle_path, 'w') as f:
-			json.dumps(tles, f)
 	
-	# obtain relevant tle
+	# if not provided manually, obtain latest tle from Space-Track
 	if args.line1 and args.line2:
 		print('Using TLE provided...')
 		tle = TLE(args.line1, args.line2)
@@ -72,5 +65,21 @@ if __name__ == "__main__":
 		print('Pulling latest TLE from SpaceTrack...')
 		st = ST()
 		tle = st.getLatestTLE(args.norad_id)
+	
+	# logging if TLE is new
+	if args.norad_id in tles.keys():
+		old_tle = TLE(tles[args.norad_id][-1][0],
+		              tles[args.norad_id][-1][1])
+		if tle.yday != old_tle.yday:
+			tles[args.norad_id].append([tle.line1,
+			                            tle.line2])
+		with open(args.tles_path) as f:
+			json.dumps(tles, f)
+	else:
+		tles[args.norad_id] = []
+		tles[args.norad_id].append([tle.line1,
+			                        tle.line2])
+		with open(args.tles_path) as f:
+			json.dumps(tles, f)
 		
 	print(tle.line1, tle.line2, tle.name)
