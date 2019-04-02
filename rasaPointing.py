@@ -12,6 +12,10 @@ import json
 import argparse as ap
 from datetime import datetime
 from skyfield.api import utc
+from astropy import units as u
+from astropy.coordinates import SkyCoord, Longitude, Latitude
+
+SEP_LIMIT = 1.3*u.deg # separation limit ~ half RASA FOV
 
 def argParse():
     """
@@ -45,6 +49,46 @@ def argParse():
                         action='store_true')
     
     return parser.parse_args()
+
+def getPointing(tle):
+	"""
+	Find a pointing that keeps the object of interest within the RASA
+	FOV for as long as possible
+	
+	Parameters
+	----------
+	tle : TLE object
+	    Object containing two line ephemeris information for the object
+	    of interest
+	
+	Returns
+	-------
+	ra, dec : float
+	    Right ascension and declination of desired pointing
+	"""
+	# propagate tle to current time
+	epoch_now = datetime.now().replace(tzinfo=utc)
+	ra_now, dec_now = tle.radec(epoch_now)
+	coord_now = SkyCoord(ra_now, 
+	                     dec_now, 
+	                     unit=u.deg, 
+	                     frame='icrs')
+	
+	# now propagate in 5s steps until FOV limit is reached
+	d = 0*u.deg
+	while True:
+		epoch = epoch_now + timedelta(seconds=5)
+		ra, dec = tle.radec(epoch)
+		coord = SkyCoord(ra, 
+		                 dec, 
+		                 unit=u.deg, 
+		                 frame='icrs')
+		if coord_now.separation(coord) < SEP_LIMIT:
+			ra_pointing, dec_pointing = ra, dec
+		else:
+			break
+	
+	return ra_pointing, dec_pointing
 
 if __name__ == "__main__":
 	
@@ -84,8 +128,8 @@ if __name__ == "__main__":
 		with open(args.log_path, 'w') as f:
 			json.dump(log, f)
 	
-	# find expected radec
-	ra, dec = tle.radec(datetime.now().replace(tzinfo=utc))
+	# find expected radec and offset by half FOV
+	ra, dec = getPointing(tle)
 	
 	print('---------------------\n'
 	      'Expected position of NORAD {}\n'

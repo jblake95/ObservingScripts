@@ -13,14 +13,14 @@ from astropy import units as u
 from astropy.coordinates import Longitude, Latitude
 
 TS = load.timescale() # save repeated use in iterative loops
-LE_FORMAT = '3le'     # TODO: generalise to allow for 'tle' format
+LE_FORMAT = '3le'
 
 SITE_LATITUDE = 28.7603135
 SITE_LONGITUDE = -17.8796168
 SITE_ELEVATION = 2387
 TOPOS_LOCATION = Topos(SITE_LATITUDE, 
                        SITE_LONGITUDE, 
-                       elevation_m=SITE_ELEVATION)
+                       elevation_m=SITE_ELEVATION) # location of RASA
 
 class ST:
     """
