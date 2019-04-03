@@ -1,7 +1,8 @@
 """
 RASA pointing generator
 - determine appropriate pointing for a desired norad id
-- offset by half a FOV for maximum coverage
+- offset by half a FOV for maximal and efficient coverage
+- log the TLEs used throughout night
 """
 
 from tle import (
@@ -41,11 +42,11 @@ def argParse():
                         type=str)
     
     parser.add_argument('--line1',
-                        help='manually provide TLE line 1 to skip ST',
+                        help='manually provide TLE line 1 to bypass ST',
                         action='store_true')
     
     parser.add_argument('--line2',
-                        help='manually provide TLE line 2 to skip ST',
+                        help='manually provide TLE line 2 to bypass ST',
                         action='store_true')
     
     return parser.parse_args()
@@ -64,7 +65,8 @@ def getPointing(tle):
 	Returns
 	-------
 	ra, dec : float
-	    Right ascension and declination of desired pointing
+	    Right ascension and declination of desired pointing giving 
+	    maximal coverage
 	"""
 	# propagate tle to current time
 	epoch = datetime.now().replace(tzinfo=utc)
@@ -73,13 +75,24 @@ def getPointing(tle):
 	                     dec_now, 
 	                     unit=u.deg, 
 	                     frame='icrs')
-	print(ra_now, dec_now)
-	# now propagate in 5s steps until FOV limit is reached
+	
+	print('---------------------\n'
+	      'Position of NORAD {} now\n'
+	      'RA:  {}\n'
+	      'DEC: {}\n'
+	      '---------------------'.format(str(tle.norad_id),
+	                                     ra_now.to_string(),
+	                                     dec_now.to_string()))
+	
+	# propagate tle ahead in 5s steps until FOV limit is reached
+	delta_t = 5
 	d = 0*u.deg
 	while True:
-		epoch += timedelta(seconds=5)
+		epoch += timedelta(seconds=delta_t)
 		ra, dec = tle.radec(epoch)
-		print(ra, dec)
+		print('{:15s} {:15s} at now+ {:5d} s'.format(ra.to_string(),
+		                                             dec.to_string(),
+		                                             delta_t))
 		coord = SkyCoord(ra, 
 		                 dec, 
 		                 unit=u.deg, 
@@ -90,8 +103,10 @@ def getPointing(tle):
 			ra_pointing, dec_pointing = ra, dec
 		else:
 			break
+		
+		delta_t += 5
 	
-	return ra_pointing, dec_pointing
+	return ra_pointing, dec_pointing, delta_t
 
 if __name__ == "__main__":
 	
@@ -121,8 +136,8 @@ if __name__ == "__main__":
 		if tle.yday != old_tle.yday:
 			log[args.norad_id].append([tle.line1,
 			                           tle.line2])
-		with open(args.log_path, 'w') as f:
-			json.dump(log, f)
+			with open(args.log_path, 'w') as f:
+				json.dump(log, f)
 	else:
 		log.update({args.norad_id:[]})
 		log[args.norad_id].append([tle.line1,
@@ -132,12 +147,13 @@ if __name__ == "__main__":
 			json.dump(log, f)
 	
 	# find expected radec and offset by half FOV
-	ra, dec = getPointing(tle)
+	ra, dec, dt = getPointing(tle)
 	
 	print('---------------------\n'
-	      'Expected position of NORAD {}\n'
+	      'Position of NORAD {} in {}s\n'
 	      'RA:  {}\n'
 	      'DEC: {}\n'
 	      '---------------------'.format(str(args.norad_id),
+	                                     str(dt),
 	                                     ra.to_string(),
 	                                     dec.to_string()))
