@@ -98,14 +98,22 @@ def getPointing(tle):
 		                 dec, 
 		                 unit=u.deg, 
 		                 frame='icrs')
-		
 		d = coord_now.separation(coord)
+		
 		if d < SEP_LIMIT:
 			ra_pointing, dec_pointing = ra, dec
-		elif delta_t > 3600:
-			print('Exceeded 1hr without leaving FOV.')
-			ra_pointing, dec_pointing = ra_now, dec_now
+			# offset not worth it for high delta_t
+			if delta_t > 1800:
+				print('Exceeded 1hr without leaving FOV.\n'
+				      'Using original pointing...')
+				ra_pointing, dec_pointing = ra_now, dec_now
+		# warn user if object within FOV for short time
+		elif d > SEP_LIMIT and delta_t < 30:
+			print('FOV limit reached.\n'
+			      '***WARNING: Less than 1min within FOV!***')
+			break
 		else:
+			print('FOV limit reached.')
 			break
 		
 		delta_t += 5
