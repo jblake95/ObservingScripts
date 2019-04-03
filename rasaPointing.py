@@ -69,8 +69,8 @@ def getPointing(tle):
 	    maximal coverage
 	"""
 	# propagate tle to current time
-	epoch = datetime.now().replace(tzinfo=utc)
-	ra_now, dec_now = tle.radec(epoch)
+	epoch_now = datetime.now().replace(tzinfo=utc)
+	ra_now, dec_now = tle.radec(epoch_now)
 	coord_now = SkyCoord(ra_now, 
 	                     dec_now, 
 	                     unit=u.deg, 
@@ -88,7 +88,7 @@ def getPointing(tle):
 	delta_t = 5
 	d = 0*u.deg
 	while True:
-		epoch += timedelta(seconds=delta_t)
+		epoch = epoch_now + timedelta(seconds=delta_t)
 		ra, dec = tle.radec(epoch)
 		print('{:15s} {:15s} at now+ {:5d} s'.format(ra.to_string(),
 		                                             dec.to_string(),
