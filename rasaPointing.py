@@ -77,10 +77,11 @@ def getPointing(tle):
 	                     frame='icrs')
 	
 	print('---------------------\n'
-	      'Position of NORAD {} now\n'
+	      'Position of NORAD {} at {}\n'
 	      'RA:  {}\n'
 	      'DEC: {}\n'
 	      '---------------------'.format(str(tle.norad_id),
+	                                     str(epoch_now),
 	                                     ra_now.to_string(),
 	                                     dec_now.to_string()))
 	
@@ -90,9 +91,9 @@ def getPointing(tle):
 	while True:
 		epoch = epoch_now + timedelta(seconds=delta_t)
 		ra, dec = tle.radec(epoch)
-		print('{:15s} {:15s} at now+ {:5d} s'.format(ra.to_string(),
-		                                             dec.to_string(),
-		                                             delta_t))
+		print('{:15s} {:15s} at {}'.format(ra.to_string(),
+		                                   dec.to_string(),
+		                                   str(epoch)))
 		coord = SkyCoord(ra, 
 		                 dec, 
 		                 unit=u.deg, 
@@ -101,6 +102,9 @@ def getPointing(tle):
 		d = coord_now.separation(coord)
 		if d < SEP_LIMIT:
 			ra_pointing, dec_pointing = ra, dec
+		elif delta_t > 3600:
+			print('Exceeded 1hr without leaving FOV.')
+			ra_pointing, dec_pointing = ra_now, dec_now
 		else:
 			break
 		
