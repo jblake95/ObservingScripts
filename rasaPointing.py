@@ -10,7 +10,7 @@ from tle import (
     )
 import json
 import argparse as ap
-from datetime import datetime
+from datetime import datetime, timedelta
 from skyfield.api import utc
 from astropy import units as u
 from astropy.coordinates import SkyCoord, Longitude, Latitude
@@ -67,23 +67,26 @@ def getPointing(tle):
 	    Right ascension and declination of desired pointing
 	"""
 	# propagate tle to current time
-	epoch_now = datetime.now().replace(tzinfo=utc)
-	ra_now, dec_now = tle.radec(epoch_now)
+	epoch = datetime.now().replace(tzinfo=utc)
+	ra_now, dec_now = tle.radec(epoch)
 	coord_now = SkyCoord(ra_now, 
 	                     dec_now, 
 	                     unit=u.deg, 
 	                     frame='icrs')
-	
+	print(ra_now, dec_now)
 	# now propagate in 5s steps until FOV limit is reached
 	d = 0*u.deg
 	while True:
-		epoch = epoch_now + timedelta(seconds=5)
+		epoch += timedelta(seconds=5)
 		ra, dec = tle.radec(epoch)
+		print(ra, dec)
 		coord = SkyCoord(ra, 
 		                 dec, 
 		                 unit=u.deg, 
 		                 frame='icrs')
-		if coord_now.separation(coord) < SEP_LIMIT:
+		
+		d = coord_now.separation(coord)
+		if d < SEP_LIMIT:
 			ra_pointing, dec_pointing = ra, dec
 		else:
 			break
