@@ -22,6 +22,12 @@ TOPOS_LOCATION = Topos(SITE_LATITUDE,
                        SITE_LONGITUDE, 
                        elevation_m=SITE_ELEVATION) # location of RASA
 
+GEO_CHECK = ['g', 'geo']
+LEO_CHECK = ['l', 'leo']
+MEO_CHECK = ['m', 'meo']
+HEO_CHECK = ['h', 'heo']
+ALL_CHECK = ['a', 'all']
+
 class ST:
     """
     Space-Track Interface
@@ -52,6 +58,53 @@ class ST:
         tle = [line for line in elset]
         
         return TLE(tle[1], tle[2], name=tle[0])
+    
+    def getLatestCatalog(self, orb):
+		"""
+		Obtain latest TLE catalog for an orbital type
+		"""
+		if orb.type in GEO_CHECK + LEO_CHECK:
+			result = self.client.tle(iter_lines=True,
+									 eccentricity=orb.e_lim,
+									 mean_motion=orb.mm_lim,
+									 epoch='>now-30',
+									 ordinal=1,
+									 limit=200000,
+									 format=LE_FORMAT)
+		elif orb.type in MEO_CHECK:
+			result = self.client.tle(iter_lines=True,
+									 eccentricity=orb.e_lim,
+									 period=orb.p_lim,
+									 epoch='>now-30',
+									 ordinal=1,
+									 limit=200000,
+									 format=LE_FORMAT)
+		elif orb.type in HEO_CHECK:
+			result = self.client.tle(iter_lines=True,
+									 eccentricity=orb.e_lim,
+									 epoch='>now-30',
+									 ordinal=1,
+									 limit=200000,
+									 format=LE_FORMAT)
+		elif orb.type in ALL_CHECK:
+			result = self.client.tle(iter_lines=True,
+									 epoch='>now-30',
+									 ordinal=1,
+									 limit=200000,
+									 format=LE_FORMAT)
+		else:
+			print('Incorrect format! Please supply a valid' 
+				  'orbit type... \n'
+				  'GEO - "g" \n'
+				  'LEO - "l" \n'
+				  'MEO - "m" \n'
+				  'HEO - "h" \n'
+				  'ALL - "a" \n')
+			quit()
+		
+		#TODO: organize into user-friendly format
+		
+		return catalog
 
 class TLE:
     """
@@ -87,3 +140,45 @@ class TLE:
         ra, dec, _ = (self.obj-self.obs).at(self.ts.utc(epoch)).radec()
         
         return Longitude(ra.hours, u.hourangle), Latitude(dec.degrees, u.deg)
+
+class Orbit:
+    """
+    Convenience class for orbit-specific searches
+    """
+    def __init__(self, orb_type):
+        """
+        Initiate Orbit object using SpaceTrack definitions
+        
+        Parameters
+        ----------
+        orb_type : str
+            Desired type of orbit
+            'g' - GEO
+            'l' - LEO
+            'm' - MEO
+            'h' - HEO
+            'a' - ALL
+        """
+        self.type = orb_type.lower()
+        if self.type in GEO_CHECK:
+            self.e_lim = '<0.01'
+            self.mm_lim = '0.99--1.01'
+        elif self.type in LEO_CHECK:
+            self.e_lim = '<0.25'
+            self.mm_lim = '>11.25'
+        elif self.type in MEO_CHECK:
+            self.e_lim = '<0.25'
+            self.p_lim = '600--800'
+        elif self.type in HEO_CHECK:
+            self.e_lim = '>0.25'
+        elif self.type in ALL_CHECK:
+            print('Full catalogue specified; no limits placed.')
+        else:
+            print('Incorrect format! Please provide a valid' 
+                  'orbit type... \n'
+                  'GEO - "g" \n'
+                  'LEO - "l" \n'
+                  'MEO - "m" \n'
+                  'HEO - "h" \n'
+                  'ALL - "a" \n')
+            quit()
