@@ -69,7 +69,7 @@ def getPointing(tle):
 	    maximal coverage
 	"""
 	# propagate tle to current time
-	epoch_now = datetime.now().replace(tzinfo=utc)
+	epoch_now = datetime.utcnow().replace(tzinfo=utc)
 	ra_now, dec_now = tle.radec(epoch_now)
 	coord_now = SkyCoord(ra_now, 
 	                     dec_now, 
