@@ -79,6 +79,19 @@ def parseInput(args):
     
     return orbit, epoch
 
+def onpick(event):
+    """
+    Actions to perform upon picker event
+    
+    Parameters
+    ----------
+    event : Picker event
+        User picked a point
+    """
+    ind = event.ind
+    obj = cat_info[ind]
+    print('Selected object: ', obj)
+
 if __name__ == "__main__":
     
     args = argParse()
@@ -105,6 +118,7 @@ if __name__ == "__main__":
     print('Number of objects visible: {}'.format(str(len(catalog))))
     
     # pull satcat and save relevant info to file
+    global cat_info
     cat_info = Table(names=['norad_id', 
                             'name', 
                             'type',
@@ -148,12 +162,14 @@ if __name__ == "__main__":
     cat_info.write(out_path, format='csv')
     
     # plot the visible objects
-    plt.figure()
-    plt.subplot(111, projection='polar')
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
     
-    plt.plot(cat_info['ra'], cat_info['dec'], 'k.')
+    ax.plot(cat_info['ra'], cat_info['dec'], 'ko', picker=5)
     
     plt.xlabel('Right ascension')
     plt.ylabel('Declination')
+    
+    fig.canvas.mpl_connect('pick_event', onpick)
     
     plt.show()
