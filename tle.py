@@ -21,20 +21,22 @@ from astropy.coordinates import (
     )
 
 TS = load.timescale() # save repeated use in iterative loops
-LE_FORMAT = '3le'
+LE_FORMAT = '3le'     # catalog storage is set up to use 3le format
 
+# location of RASA, La Palma
 SITE_LATITUDE = 28.7603135
 SITE_LONGITUDE = -17.8796168
 SITE_ELEVATION = 2387
-
-# location of RASA
 SITE_LOCATION = EarthLocation(lat=SITE_LATITUDE*u.deg,
                               lon=SITE_LONGITUDE*u.deg,
                               height=SITE_ELEVATION*u.m)
+
+# topocentric location of RASA, La Palma
 TOPOS_LOCATION = Topos(SITE_LATITUDE, 
                        SITE_LONGITUDE, 
                        elevation_m=SITE_ELEVATION)
 
+# checks for orbital type requests
 GEO_CHECK = ['g', 'geo']
 LEO_CHECK = ['l', 'leo']
 MEO_CHECK = ['m', 'meo']
@@ -46,6 +48,9 @@ class ST:
     Space-Track Interface
     """
     def __init__(self):
+        """
+        Connects user to Space-Track account
+        """
         un, pw = self.requestAccess()
         self.username = un
         self.password = pw
@@ -53,7 +58,7 @@ class ST:
     
     def requestAccess(self):
         """
-        Obtain user access details
+        Obtain user access details - requests password from user
         """
         st_un = 'J.Blake@warwick.ac.uk'
         st_pw = gp.getpass('Space-Track password: ')
@@ -63,6 +68,16 @@ class ST:
     def getLatestTLE(self, norad_id):
         """
         Obtain latest TLE for a NORAD object
+        
+        Parameters
+        ----------
+        norad_id : int
+            NORAD catalogue ID for the object of interest
+        
+        Returns
+        -------
+        tle : TLE object
+            Latest TLE object for the object of interest
         """
         elset = self.client.tle_latest(norad_cat_id=norad_id,
                                        iter_lines=True,
@@ -75,6 +90,16 @@ class ST:
     def getLatestCatalog(self, orb):
         """
         Obtain latest TLE catalog for an orbital type
+        
+        Parameters
+        ----------
+        orb : Orbit object
+            Orbit object encoding the desired orbital type
+        
+        Returns
+        -------
+        catalog : dict
+            Directory of latest TLE objects, look up by NORAD ID
         """
         print('Pulling TLEs from Space-Track...')
         if orb.type in GEO_CHECK + LEO_CHECK:
@@ -130,10 +155,22 @@ class TLE:
     Two Line Element
     """
     def __init__(self, line1, line2, name=None):
+        """
+        Initiates the TLE
+        
+        Parameters
+        ----------
+        line1, line2 : str
+            First and second lines of the TLE
+        name : str, optional
+            Name of the object to which the TLE is attributed
+        """
         self.line1 = line1
         self.line2 = line2
         if name is not None:
             self.name = name[2:]
+        else:
+            self.name = 'UNKNOWN'
         
         # ephemeris info
         self.obs = TOPOS_LOCATION
@@ -155,6 +192,16 @@ class TLE:
     def radec(self, epoch):
         """
         Determine radec coords for a given epoch
+        
+        Parameters
+        ----------
+        epoch : datetime object
+            Datetime object [utc] with replaced tzinfo as utc
+        
+        Returns
+        -------
+        ra, dec : Longitude and Latitude objects
+            Right ascension and declination of object at given epoch
         """
         ra, dec, _ = (self.obj-self.obs).at(self.ts.utc(epoch)).radec()
         
@@ -163,6 +210,16 @@ class TLE:
     def hourangle(self, epoch):
         """
         Determine hourangle for a given epoch
+        
+        Parameters
+        ----------
+        epoch : datetime object
+            Datetime object [utc] with replaced tzinfo as utc
+        
+        Returns
+        -------
+        hourangle : Longitude object
+            Hourangle of object at given epoch
         """
         ra, _ = self.radec(epoch)
         lst = Time(datetime.utcnow(), 
@@ -174,6 +231,16 @@ class TLE:
     def altaz(self, epoch):
         """
         Determine altaz coords for a given epoch
+        
+        Parameters
+        ----------
+        epoch : datetime object
+            Datetime object [utc] with replaced tzinfo as utc
+        
+        Returns
+        -------
+        alt, az : Angle objects
+            Altitude and azimuth of object at given epoch
         """
         ra, dec = self.radec(epoch)
         
