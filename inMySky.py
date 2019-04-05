@@ -189,7 +189,7 @@ if __name__ == "__main__":
                                           str(epoch).replace(' ', 'T'))
     cat_info.write(out_path, format='csv')
     
-    # plot the visible objects
+    # plot the visible objects and allow user to select & view info
     fig = plt.figure()
     ax = fig.add_subplot(111)
     
