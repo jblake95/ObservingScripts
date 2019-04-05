@@ -93,12 +93,14 @@ class ST:
         
         Parameters
         ----------
-        norad_id : int
-            NORAD catalogue ID for the object of interest
+        norad_id : int | list
+            NORAD catalogue ID(s) for the object(s) of interest
         
         Returns
         -------
-        satcat : 
+        satcat : dict | list
+            Directory(List of directories) of information for the
+            object(s) of interest
         """
         satcat = self.client.satcat(norad_cat_id=norad_id)[0]
         
