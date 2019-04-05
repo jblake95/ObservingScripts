@@ -87,6 +87,23 @@ class ST:
         
         return TLE(tle[1], tle[2], name=tle[0])
     
+    def getSatCat(self, norad_id):
+        """
+        Obtain the satcat entry for the object of interest
+        
+        Parameters
+        ----------
+        norad_id : int
+            NORAD catalogue ID for the object of interest
+        
+        Returns
+        -------
+        satcat : 
+        """
+        satcat = self.client.satcat(norad_cat_id=norad_id)[0]
+        
+        return satcat
+    
     def getLatestCatalog(self, orb):
         """
         Obtain latest TLE catalog for an orbital type
@@ -248,6 +265,37 @@ class TLE:
         altaz = SkyCoord(ra, dec).transform_to(aa)
         
         return altaz.alt, altaz.az
+
+class SatCat:
+    """
+    Satellite catalog entry
+    """
+    def __init__(self, entry):
+        """
+        Initiate satcat entry
+        
+        Parameters
+        ----------
+        entry : dict
+            Directory of satcat information for object of interest
+        """
+        # launch info
+        self.launchyear = entry['LAUNCH_YEAR']
+        self.launchdate = entry['LAUNCH']
+        self.launchsite = entry['SITE']
+        
+        # object info
+        self.norad_id = entry['NORAD_CAT_ID']
+        self.name = entry['OBJECT_NAME']
+        self.objtype = entry['OBJECT_TYPE']
+        self.country = entry['COUNTRY']
+        self.size = entry['RCS_SIZE']
+        
+        # orbit info
+        self.period = entry['PERIOD']
+        self.apogee = entry['APOGEE']
+        self.perigee = entry['PERIGEE']
+        self.inclination = entry['INCLINATION']
 
 class Orbit:
     """
