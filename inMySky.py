@@ -93,7 +93,9 @@ if __name__ == "__main__":
     
     # filter out objects that aren't visible
     remove_keys = []
-    for norad_id in catalog.keys():
+    for dummy, norad_id in enumerate(catalog.keys()):
+        print('Checking {}/{}'.format(str(dummy),
+                                      str(len(catalog))), end="\r")
         alt, _ = catalog[norad_id].altaz(epoch)
         if alt < ALT_LIM:
             remove_keys.append(norad_id)
@@ -110,12 +112,14 @@ if __name__ == "__main__":
                             'size',
                             'launch',
                             'altitude',
+                            'ra',
+                            'dec',
                             'period',
                             'apogee',
                             'perigee',
                             'inclination',
                             'eccentricity'],
-                     dtype=['i8'] + ['U25']*5 + ['f8']*6)
+                     dtype=['i8'] + ['U25']*5 + ['f8']*8)
     
     satcat = st.getSatCat(sorted(catalog.keys()))
     for i, norad_id in enumerate(sorted(catalog.keys())):
@@ -129,7 +133,9 @@ if __name__ == "__main__":
                           satcat_i.country,
                           satcat_i.size,
                           satcat_i.launchdate,
-                          tle.altaz(epoch)[0],
+                          tle.altaz(epoch)[0].deg,
+                          tle.radec(epoch)[0].deg,
+                          tle.radec(epoch)[1].deg,
                           satcat_i.period,
                           satcat_i.apogee,
                           satcat_i.perigee,
@@ -142,7 +148,12 @@ if __name__ == "__main__":
     cat_info.write(out_path, format='csv')
     
     # plot the visible objects
+    plt.figure()
+    plt.subplot(111, projection='polar')
     
-        
-        
-        
+    plt.plot(cat_info['ra'], cat_info['dec'], 'k.')
+    
+    plt.xlabel('Right ascension')
+    plt.ylabel('Declination')
+    
+    plt.show()
