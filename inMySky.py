@@ -31,22 +31,34 @@ def argParse():
                         type=str)
     
     parser.add_argument('--epoch',
-                        help='manually provide TLE line 1 to bypass ST',
-                        action='store_true')
+                        help='epoch for propagating TLEs, \n'
+                             'format: YYYY-mm-ddTHH:MM:SS.s [utc]',
+                        type=str)
     
     return parser.parse_args()
 
-if __name__ = "__main__":
-	
-	args = argParse()
-	
-	if args.type:
-		orbit = Orbit(args.type)
-	else:
-		orbit = Orbit('all')
-	
-	# connect to Space-Track & pull TLEs
-	st = ST()
-	
-	catalog = st.getLatestCatalog(orbit)
-		
+if __name__ == "__main__":
+    
+    args = argParse()
+    
+    if args.type:
+        orbit = Orbit(args.type)
+    else:
+        orbit = Orbit('all')
+    
+    if args.epoch:
+        epoch = datetime.strptime(args.epoch, 
+                                  '%Y-%m-%dT%H:%M:%S.%f')
+        epoch = epoch.replace(tzinfo=utc)
+    else:
+        epoch = datetime.utcnow().replace(tzinfo=utc)
+    
+    # connect to Space-Track & pull TLEs
+    st = ST()
+    
+    catalog = st.getLatestCatalog(orbit)
+    
+    for norad_id in catalog.keys():
+        _ = catalog[norad_id].altaz(epoch)
+        input('enter.')
+        
