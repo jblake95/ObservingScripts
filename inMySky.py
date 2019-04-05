@@ -11,12 +11,23 @@ from tle import (
 import numpy as np
 import argparse as ap
 from datetime import datetime
+from astropy.time import Time
 from astropy import units as u
 from astropy.table import Table
+from astropy.coordinates import EarthLocation
 from skyfield.api import utc
 import matplotlib.pyplot as plt
 
+# altitude limit for visibility
 ALT_LIM = 30.*u.deg
+
+# location of RASA, La Palma
+SITE_LATITUDE = 28.7603135
+SITE_LONGITUDE = -17.8796168
+SITE_ELEVATION = 2387
+SITE_LOCATION = EarthLocation(lat=SITE_LATITUDE*u.deg,
+                              lon=SITE_LONGITUDE*u.deg,
+                              height=SITE_ELEVATION*u.m)
 
 def argParse():
     """
@@ -90,7 +101,24 @@ def onpick(event):
     """
     ind = event.ind
     obj = cat_info[ind]
-    print('Selected object: ', obj)
+    print('---------------------\n'
+          'Selected object:\n'
+          'Name:   {}\n'
+          'ID:     {}\n'
+          'Type:   {}\n'
+          'Nation: {}\n'
+          'Size:   {}\n'
+          'Launch: {}\n'
+          'Alt:    {}\n'
+          'Incl:   {}\n'
+          '---------------------'.format(obj['name'][0],
+                                         obj['norad_id'][0],
+                                         obj['type'][0],
+                                         obj['country'][0],
+                                         obj['size'][0],
+                                         obj['launch'][0],
+                                         obj['altitude'][0],
+                                         obj['inclination'][0]))
 
 if __name__ == "__main__":
     
@@ -165,10 +193,24 @@ if __name__ == "__main__":
     fig = plt.figure()
     ax = fig.add_subplot(111)
     
-    ax.plot(cat_info['ra'], cat_info['dec'], 'ko', picker=5)
+    ax.plot(cat_info['ra'], 
+            cat_info['dec'], 
+            'ko', 
+            label='Objects', 
+            picker=5)
     
-    plt.xlabel('Right ascension')
-    plt.ylabel('Declination')
+    lst = Time(epoch, 
+               scale='utc', 
+               location=SITE_LOCATION).sidereal_time('apparent').deg
+    ax.axvline(x=lst, 
+               color='r', 
+               linestyle='--', 
+               label='LST')
+    
+    ax.set_xlabel('Right ascension [deg]')
+    ax.set_ylabel('Declination [deg]')
+    
+    plt.legend()
     
     fig.canvas.mpl_connect('pick_event', onpick)
     
