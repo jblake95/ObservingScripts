@@ -5,11 +5,14 @@ Find which satellites are visible at a given epoch and location
 from tle import (
     ST,
     TLE,
+    SatCat,
     Orbit,
     )
+import numpy as np
 import argparse as ap
 from datetime import datetime
 from astropy import units as u
+from astropy.table import Table
 from skyfield.api import utc
 import matplotlib.pyplot as plt
 
@@ -29,6 +32,10 @@ def argParse():
         Array of command line arguments
     """
     parser = ap.ArgumentParser()
+    
+    parser.add_argument('out_dir',
+                        help='output directory for catalog',
+                        type=str)
     
     parser.add_argument('--orbit',
                         help='type of orbit',
@@ -78,7 +85,7 @@ if __name__ == "__main__":
     
     orbit, epoch = parseInput(args)
     
-    # connect to Space-Track & pull TLEs
+    # connect to Space-Track & pull catalog of TLEs
     st = ST()
     
     catalog = st.getLatestCatalog(orbit)
@@ -90,11 +97,52 @@ if __name__ == "__main__":
         alt, _ = catalog[norad_id].altaz(epoch)
         if alt < ALT_LIM:
             remove_keys.append(norad_id)
-    
     for norad_id in remove_keys:
         del catalog[norad_id]
     
     print('Number of objects visible: {}'.format(str(len(catalog))))
+    
+    # pull satcat and save relevant info to file
+    cat_info = Table(names=['norad_id', 
+                            'name', 
+                            'type',
+                            'country',
+                            'size',
+                            'launch',
+                            'altitude',
+                            'period',
+                            'apogee',
+                            'perigee',
+                            'inclination',
+                            'eccentricity'],
+                     dtype=['i8'] + ['U25']*5 + ['f8']*6)
+    
+    satcat = st.getSatCat(sorted(catalog.keys()))
+    for i, norad_id in enumerate(sorted(catalog.keys())):
+        print('Saving info {}/{}'.format(str(i),
+                                         str(len(catalog))), end="\r")
+        tle = catalog[norad_id]
+        satcat_i = SatCat(satcat[i])
+        cat_info.add_row([satcat_i.norad_id,
+                          satcat_i.name,
+                          satcat_i.objtype,
+                          satcat_i.country,
+                          satcat_i.size,
+                          satcat_i.launchdate,
+                          tle.altaz(epoch)[0],
+                          satcat_i.period,
+                          satcat_i.apogee,
+                          satcat_i.perigee,
+                          tle.inclination,
+                          tle.eccentricity])
+    
+    out_path = '{}InSky-{}-{}.csv'.format(args.out_dir,
+                                          orbit.type,
+                                          str(epoch).replace(' ', 'T'))
+    cat_info.write(out_path, format='csv')
+    
+    # plot the visible objects
+    
         
         
         

@@ -98,13 +98,11 @@ class ST:
         
         Returns
         -------
-        satcat : dict | list
-            Directory(List of directories) of information for the
-            object(s) of interest
+        satcat : list
+            List of directories of information for the object(s) 
+            of interest
         """
-        satcat = self.client.satcat(norad_cat_id=norad_id)[0]
-        
-        return satcat
+        return self.client.satcat(norad_cat_id=norad_id)
     
     def getLatestCatalog(self, orb):
         """
@@ -279,7 +277,7 @@ class SatCat:
         Parameters
         ----------
         entry : dict
-            Directory of satcat information for object of interest
+            Directory of satcat information for the object of interest
         """
         # launch info
         self.launchyear = entry['LAUNCH_YEAR']
