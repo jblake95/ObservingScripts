@@ -196,7 +196,7 @@ class TLE:
         Parameters
         ----------
         epoch : datetime object
-            Datetime object [utc] with replaced tzinfo as utc
+            datetime object [utc] with replaced tzinfo as utc
         
         Returns
         -------
@@ -214,7 +214,7 @@ class TLE:
         Parameters
         ----------
         epoch : datetime object
-            Datetime object [utc] with replaced tzinfo as utc
+            datetime object [utc] with replaced tzinfo as utc
         
         Returns
         -------
@@ -235,7 +235,7 @@ class TLE:
         Parameters
         ----------
         epoch : datetime object
-            Datetime object [utc] with replaced tzinfo as utc
+            datetime object [utc] with replaced tzinfo as utc
         
         Returns
         -------
