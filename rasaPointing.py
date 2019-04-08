@@ -17,6 +17,7 @@ from astropy import units as u
 from astropy.coordinates import SkyCoord, Longitude, Latitude
 
 SEP_LIMIT = 1.3*u.deg # separation limit ~ half RASA FOV
+#SIDEREAL_RATE = 
 
 def argParse():
     """
@@ -91,9 +92,7 @@ def getPointing(tle):
 	while True:
 		epoch = epoch_now + timedelta(seconds=delta_t)
 		ra, dec = tle.radec(epoch)
-		print('{:15s} {:15s} at {}'.format(ra.to_string(),
-		                                   dec.to_string(),
-		                                   str(epoch)))
+		
 		coord = SkyCoord(ra, 
 		                 dec, 
 		                 unit=u.deg, 
@@ -154,7 +153,7 @@ if __name__ == "__main__":
 		log.update({args.norad_id:[]})
 		log[args.norad_id].append([tle.line1,
 			                       tle.line2])
-		print(log)
+		
 		with open(args.log_path, 'w') as f:
 			json.dump(log, f)
 	
@@ -169,3 +168,4 @@ if __name__ == "__main__":
 	                                     str(dt),
 	                                     ra.to_string(),
 	                                     dec.to_string()))
+	
