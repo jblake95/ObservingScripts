@@ -207,6 +207,9 @@ if __name__ == "__main__":
                linestyle='--', 
                label='LST')
     
+    ax.set_title('InYourSky: {} {}'.format(orbit.type,
+                                           str(epoch)))
+    
     ax.set_xlabel('Right ascension [deg]')
     ax.set_ylabel('Declination [deg]')
     
